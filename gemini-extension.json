@@ -2,7 +2,7 @@
   "name": "talk",
   "version": "1.0.0",
   "mcpServers": {
-    "vision": {
+    "talk": {
       "command": "bash",
       "args": ["${extensionPath}${/}servers${/}run.sh"]
     }

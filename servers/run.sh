@@ -8,7 +8,7 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 # 1) Create venv if missing
 if [ ! -x "$VENV/bin/python3" ]; then
-  echo "[vision] creating venv at $VENV" >&2
+  echo "[talk] creating venv at $VENV" >&2
   "$PYTHON_BIN" -m venv "$VENV" 1>&2
   "$VENV/bin/pip" install -U pip wheel setuptools --disable-pip-version-check -q 1>&2
 fi
