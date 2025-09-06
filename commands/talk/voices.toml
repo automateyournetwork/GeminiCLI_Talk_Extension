@@ -1,0 +1,41 @@
+description = "List available TTS voices and the default voice code."
+
+prompt = """
+You have tools: list_voices.
+
+Goal:
+- Call list_voices() once.
+- Print a clean table: code, label, style.
+- Highlight which one is default.
+- Show how to use with /talk:start or /talk:tts.
+
+Steps:
+1) Call list_voices().
+2) Render like:
+
+Available TTS voices (default: <code>)
+
+code      label      style
+--------  ---------  -------------------------
+alloy     Alloy      neutral, clear
+ash       Ash        soft, natural
+ballad    Ballad     lyrical, smooth
+coral     Coral      bright, upbeat
+echo      Echo       resonant, deep
+fable     Fable      storyteller, expressive
+nova      Nova       dynamic, lively
+onyx      Onyx       strong, authoritative
+sage      Sage       calm, thoughtful
+shimmer   Shimmer    crisp, energetic
+
+Usage:
+- Pick a voice for hands-free replies:
+  /talk:start voice=onyx blocking=false
+
+- Re-speak the last reply with a new voice:
+  /talk:tts voice=shimmer
+
+Notes:
+- Voices are language-agnostic; they read whatever text you give them.
+- If you pass an unknown code, the system falls back to the default.
+"""

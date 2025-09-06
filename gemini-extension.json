@@ -1,0 +1,12 @@
+{
+  "name": "vision",
+  "version": "1.0.0",
+  "mcpServers": {
+    "vision": {
+      "command": "bash",
+      "args": ["${extensionPath}${/}servers${/}run.sh"]
+    }
+  },
+  "contextFileName": "GEMINI.md",
+  "excludeTools": []
+}

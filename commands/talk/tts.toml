@@ -1,0 +1,36 @@
+description = "Speak the last assistant reply with TTS (no typing, no reading)."
+
+prompt = """
+You have tools: tts_speak, Shell.
+
+Goal:
+- Take the MOST RECENT assistant message in this conversation and speak it aloud.
+- If there is no prior assistant message, say briefly: "Nothing to speak yet."
+
+Args (parsed from key=value after the command):
+- voice:str (optional)
+- model:str (optional)
+
+Steps:
+1) Let M = the text of the last assistant message shown above.
+   - If M is empty or missing, print: "Nothing to speak yet." and STOP.
+
+2) Call tts_speak(text=M, voice=voice?, model=model?).
+   - Pass voice/model ONLY if the user provided them.
+
+3) If the tool returns ok=true AND a path:
+   - On its own line, EMIT a single token using the absolute path returned:
+       [[AUDIO:{tool_result.path}]]
+     (No extra words, no punctuation, no code fences.)
+
+   - Then PLAY the audio in the background using the Shell tool:
+       • If the environment variable PLAY_CMD is set, substitute {file} with the path and run it.
+       • Otherwise run this fallback (POSIX/WSL-friendly):
+         ffplay -autoexit -nodisp -loglevel error "{tool_result.path}"
+
+   - Implementation detail for Shell:
+     Run non-blocking, silence output, and DO NOT echo the command. Example:
+     sh -lc '(${PLAY_CMD//{file}/"{{tool_result.path}}"} || ffplay -autoexit -nodisp -loglevel error "{{tool_result.path}}") >/dev/null 2>&1 & disown'
+
+4) If tts_speak fails, silently skip playback and do not print tool JSON.
+"""

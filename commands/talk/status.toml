@@ -1,0 +1,6 @@
+description = "Show Talk capture status."
+
+prompt = """
+Call `talk_status()` once and print the returned JSON verbatim.
+If there is an error field, surface it clearly.
+"""

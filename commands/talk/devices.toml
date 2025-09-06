@@ -1,0 +1,7 @@
+description = "List available microphone/input devices (Talk MCP)."
+
+prompt = """
+Call `list_devices()`.
+If devices exist, render a neat table with: index, name, rate_default, max_input_channels.
+Also print advice: “Use /talk:start device_index=<index> to select a mic.”
+"""

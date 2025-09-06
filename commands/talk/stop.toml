@@ -1,0 +1,12 @@
+description = "Stop Talk mode immediately."
+
+prompt = """
+You have tools: talk_stop, talk_status.
+
+Steps:
+1) Call talk_stop(). If nothing is recording, do nothing.
+2) Confirm stop by calling talk_status() once.
+3) Briefly reply: "Stopped talk mode."
+
+Do not print tool payloads or extra diagnostics.
+"""

@@ -1,0 +1,25 @@
+description = "Show languages supported by /talk:start --language=..."
+
+prompt = """
+Do NOT call tools. Print the supported language codes for /talk:start language=...
+
+Supported language codes (Whisper STT + OpenAI TTS):
+• en  English
+• es  Spanish
+• fr  French
+• de  German
+• it  Italian
+• pt  Portuguese
+• ru  Russian
+• ar  Arabic
+• hi  Hindi
+• ja  Japanese
+• ko  Korean
+• zh  Chinese (Simplified/Traditional)
+• yue Cantonese (alias; handled as zh internally)
+
+Notes:
+• Use language=auto to let Whisper detect.
+• Cantonese: specify language=yue to request Cantonese; Whisper receives zh, and TTS will speak Cantonese if the text is Cantonese/Traditional.
+• You can also pass common aliases like zh-cn, zh-tw; they map to zh.
+"""

@@ -1,0 +1,83 @@
+description = "Help for Talk: mic → transcript → assistant reply → TTS (hands-free)."
+
+prompt = """
+You are the assistant. Print a clear, concise help guide for the Talk system.
+Do NOT call tools. Do NOT use code fences. Output human-readable text only.
+
+TALK — Hands-free voice mode
+----------------------------
+Commands:
+• /talk:start [key=value ...]     Start a capture cycle (hands-free loop logic lives in :start).
+• /talk:stop                      Ask the MCP to stop capture if running.
+• /talk:status                    Show capture status (from the MCP).
+• /talk:devices                   List microphones you can select by index.
+• /talk:tts [voice=... model=...] Speak the last assistant reply with TTS.
+• /talk:langs                     Show supported language codes (incl. Cantonese alias).
+• /talk:voices                    List available TTS voices (short codes + styles).
+
+Core flow:
+1) talk_start records from your mic using VAD (pre-roll, energy gate, end-of-silence).
+2) Whisper transcribes to text (same language by default, or forced via --language).
+3) Assistant replies in chat.
+4) The agent immediately calls TTS; on success it prints exactly one line:
+   [[AUDIO:/absolute/path/file.mp3]]
+   Your CLI watcher then plays it via $PLAY_CMD if set, otherwise ffplay (non-blocking).
+
+Important token:
+• Exactly one line: [[AUDIO:/path/to/file]]
+  No extra text, no code fencing.
+
+Key /talk:start args (key=value):
+• device_index:int       Select mic (see /talk:devices). iPhones and USB headsets show up here.
+• rate:int               Sample rate (default 16000).
+• channels:int           1 or 2 (default 1).
+• chunk:int              Frames per buffer (default 1024).
+• energy_gate:float      VAD threshold; lower = more sensitive.
+• min_talk_ms:int        Minimum voiced duration (≈250–350 ms).
+• end_sil_ms:int         Silence to end utterance (≈800–1500 ms).
+• max_utter_ms:int       Hard cap per utterance (≈20000 ms).
+• pre_roll_ms:int        Audio kept before trigger (≈250–300 ms).
+• blocking:bool          true/false (hands-free wants false).
+• language:str           'auto' or a code from /talk:langs (e.g., en, fr, ja, zh, yue).
+
+TTS preferences (captured by the agent; not passed to talk_start):
+• voice / tts_voice:str  Short codes (see /talk:voices): alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer.
+• tts_model:str          e.g., gpt-4o-mini-tts (default), gpt-4o-tts
+• tts_format:str         e.g., mp3 or wav (the agent decides the container)
+
+Examples:
+• Auto language, default mic, hands-free:
+  /talk:start --blocking=false
+• French on device 2:
+  /talk:start device_index=2 language=fr blocking=false
+• Cantonese (alias):
+  /talk:start language=yue blocking=false
+• Lower the VAD gate for a quiet mic:
+  /talk:start energy_gate=10 blocking=false
+• Choose a TTS voice for hands-free replies:
+  /talk:start voice=onyx blocking=false
+• Speak the last reply again with a different voice:
+  /talk:tts voice=shimmer model=gpt-4o-mini-tts
+• Browse available voice codes:
+  /talk:voices
+
+Environment (MCP/server):
+• OPENAI_API_KEY         Required for TTS.
+• WHISPER_BIN            Prefer Whisper CLI if set (e.g., whisper).
+• WHISPER_MODEL          base | small | medium | large
+• TALK_LANG              Default STT language ("" = auto).
+• TALK_*                 Rate, channels, chunk, gates, etc.
+• TALK_TMP               Working dir for wav/mp3 files.
+• TTS_MODEL, TTS_VOICE   Defaults used by tts_speak.
+• PLAY_CMD               Optional custom player; fallback uses ffplay -autoexit.
+
+Playback contract:
+• After replying, the agent prints one audio token line:
+  [[AUDIO:/abs/path/file.mp3]]
+• The CLI plays it in the background via $PLAY_CMD or ffplay. No blocking, no echoed commands.
+
+Tips:
+• Use /talk:devices to find your iPhone/USB mic index, then pass device_index=<n>.
+• Use language=auto to let Whisper detect; force language for cleaner diarization in multilingual speech.
+• Use /talk:voices to discover and pick a voice quickly by short code.
+"""

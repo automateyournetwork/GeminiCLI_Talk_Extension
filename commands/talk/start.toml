@@ -1,0 +1,90 @@
+description = "Talk (hands-free: mic → transcript → answer → repeat until /talk:stop)."
+
+prompt = """
+You have tools: talk_start, talk_stop, list_devices, tts_speak.
+
+High-level behavior:
+- Always use the configured default args for talk_start unless overridden by user-provided args.
+- Enter a HANDS-FREE LOOP: record → transcribe → answer → short pause → repeat.
+- Record for 15 seconds
+
+Language:
+  Use --language=<code> (or 'auto' to let Whisper detect).
+  Supported codes: en, es, fr, de, it, pt, ru, ar, hi, ja, ko, zh
+  Default: en
+- Use --language=auto to let Whisper detect the language.
+
+Goal per cycle:
+1) Start capture with talk_start(...).
+   - Parse key=value args provided after the command. Supported keys:
+     rate:int, channels:int, chunk:int, energy_gate:float, min_talk_ms:int,
+     end_sil_ms:int, max_utter_ms:int, pre_roll_ms:int, device_index:int,
+     blocking:bool (true/false).
+   - Additionally, capture (but do NOT pass to talk_start) optional TTS prefs for later:
+     tts_voice:str, tts_model:str, tts_format:str (e.g., "mp3" or "wav").
+   - Only pass provided args to talk_start.
+   - If the user asked for device listing earlier, you MAY call list_devices() once to honor a provided device_index.
+
+2) If response.running is true AND blocking=false:
+     loop:
+       - record for 15 seconds total (non-blocking).
+
+3) When running=false, let T = the final transcript (from the most recent or talk_start response).
+
+4) If T is empty or only whitespace:
+     - Briefly print a tiny message like "…listening" and count this as one idle cycle.
+     - END the session politely after detecting a transcript.
+     - Otherwise continue to the next cycle (Step 1).
+
+5) If T is non-empty:
+     5a) REPLY AS THE ASSISTANT to T as if the user had typed it.
+         - Keep replies concise but helpful; preserve conversational context naturally across cycles.
+         - Do NOT call tools inside the visible reply.
+         - Do NOT wrap your reply in code fences.
+
+      5b) Immediately after the reply is printed, synthesize a voice version of your reply:
+          - Call tts_speak(text=<your reply>, voice=tts_voice?, model=tts_model?).
+          - Let A = the tool result.
+          - If A.ok and A.path:
+              • EMIT a single machine-readable token on its own line:
+                  [[AUDIO:{A.path}]]
+                (No extra text or punctuation, no code fences.)
+              • Then PLAY the audio using the Shell tool (non-blocking) in a dash-safe way:
+                  - Run exactly:
+                    sh -lc 'FILE="{A.path}"; ( [ -n "$PLAY_CMD" ] && eval "$PLAY_CMD \"$FILE\"" ) || ffplay -autoexit -nodisp -loglevel quiet "$FILE" >/dev/null 2>&1 &'
+                Do not echo the command or its output. Do not block.
+          - If tts_speak fails, skip both token and playback silently.
+
+     5c) After the token emission (or skip), wait ~30 seconds. Tell the user there is a 30 second pause. Let the user know we are waiting to allow the audio playback before recording again.
+
+6) Before starting the next cycle, check stop conditions (below). If none, go back to Step 1.
+
+Stop conditions (end the loop and session):
+- talk_start fails or cannot start the device.
+- END the session politely after detecting a transcript.
+- Total wall time > 60 minutes (safety valve).
+- A transcript consists solely of one of: "stop", "quit", "goodbye" (case-insensitive).
+- The capture is externally stopped via /talk:stop and subsequent talk_start immediately fails.
+
+Output rules:
+- The ONLY visible text should be:
+  • your assistant replies (Step 5a)
+  • brief "…listening" notices (Step 4)
+  • the single-line audio token [[AUDIO:/path]] when available (Step 5b)
+- Never dump raw tool payloads, JSON, or internal state.
+- Never wrap the token in code fences.
+
+Notes:
+- Hands-free requires blocking=false behavior from the capture tool; assume that is the default unless the user explicitly passed blocking=true.
+- The audio token is for the CLI to detect and play; do not describe it in prose—just print it as specified.
+
+"""
+[defaults]
+device_index = 0
+rate = 16000
+chunk = 1024
+energy_gate = 15
+min_talk_ms = 250
+end_sil_ms = 800
+pre_roll_ms = 250
+blocking = false
