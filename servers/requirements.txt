@@ -1,3 +1,4 @@
 fastmcp         
 openai-whisper  
 PyAudio
+openai
